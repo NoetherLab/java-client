@@ -19,3 +19,4 @@
 
 ## File-based project format:
 *.iws
+/uiDesigner.xml
