@@ -5,18 +5,18 @@
     <artifactId>java-client</artifactId>
     <packaging>jar</packaging>
     <name>java-client</name>
-    <version>1.0.0</version>
+    <version>1.2.308</version>
     <url>https://github.com/NoetherLab/java-client</url>
     <description>NoetherLab API v1 available endpoints</description>
     <scm>
         <connection>scm:git:git://github.com/NoetherLab/java-client.git</connection>
         <developerConnection>scm:git:ssh://github.com/NoetherLab/java-client.git</developerConnection>
-        <url>scm:git:git://github.comgithub.com/NoetherLab/java-client.git</url>
+        <url>scm:git:git://github.com/NoetherLab/java-client.git</url>
     </scm>
     <developers>
         <developer>
             <name>NoetherLabDev</name>
-            <email></email>
+            <email>dev@noetherlab.com</email>
         </developer>
     </developers>
     <properties>
