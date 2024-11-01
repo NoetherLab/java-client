@@ -51,6 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -182,15 +183,68 @@ public class NoetherlabClientV1 {
         }
     }
 
-    public TreeSet<LocalDate> indexTimeline(String index) {
-        //TODO:
-        return null;
+    public TreeSet<LocalDate> getIndexTimeline(String index) {
+
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "index", index, "timeline");
+
+            HttpGet request = new HttpGet(builder.build());
+
+            CloseableHttpResponse response = getHttpClient().execute(request);
+            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+            if (response.getCode() != HttpStatus.SC_OK) {
+                throw new Exception(response + ":" + responseString);
+            }
+
+            TreeSet<LocalDate> list = new TreeSet<>();
+            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+                CSVReader reader = new CSVReaderBuilder(new StringReader(responseString))
+                        .withSkipLines(1)
+                        .build();
+
+                String[] record;
+                while ((record = reader.readNext()) != null) {
+                    list.add(LocalDate.parse(record[0], DateTimeFormatter.ISO_DATE));
+                }
+            }
+            return list;
+        } catch (Exception e) {
+            logger.error("Cannot retrieve index timeline for " + index, e);
+            return null;
+        }
     }
 
 
-    public TreeSet<LocalDate> indexComposition(String index) {
-        //TODO:
-        return null;
+    public Map<String, Float> getLastIndexComposition(String index) {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "index", index, "composition");
+
+            HttpGet request = new HttpGet(builder.build());
+
+            CloseableHttpResponse response = getHttpClient().execute(request);
+            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+            if (response.getCode() != HttpStatus.SC_OK) {
+                throw new Exception(response + ":" + responseString);
+            }
+
+            Map<String, Float> composition = new LinkedHashMap<>();
+            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+                CSVReader reader = new CSVReaderBuilder(new StringReader(responseString))
+                        .withSkipLines(1)
+                        .build();
+
+                String[] record;
+                while ((record = reader.readNext()) != null) {
+                    composition.put(record[0],Float.parseFloat(record[1]));
+                }
+            }
+            return composition;
+        } catch (Exception e) {
+            logger.error("CCannot retrieve index composition for " + index, e);
+            return null;
+        }
     }
 
 
