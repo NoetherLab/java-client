@@ -9,5 +9,8 @@
         <module name="java-client" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="java-client" target="19.0.2" />
+    </bytecodeTargetLevel>
   </component>
 </project>

@@ -11,6 +11,8 @@
 /dynamic.xml
 /uiDesigner.xml
 
+/libraries
+
 ## File-based project format:
 *.iws
 

@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
 
 public class NoetherlabClientV1 {
 
-    private static final String ENDPOINT = "api.noetherlab.com";
+    private static final String ENDPOINT = "http://api.noetherlab.com";
     private final String apiKey;
 
     public static final Logger logger = LoggerFactory.getLogger(NoetherlabClientV1.class);
@@ -118,6 +118,29 @@ public class NoetherlabClientV1 {
                     .build();
         }
         return client;
+    }
+
+    public String getVersion() {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT)
+                    .setPathSegments("version");
+
+            HttpGet request = new HttpGet(builder.build());
+
+            CloseableHttpResponse response = getHttpClient().execute(request);
+
+            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+            if (response.getCode() != HttpStatus.SC_OK) {
+                throw new Exception(responseString);
+            }
+
+            return responseString;
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+
     }
 
     public SortedDataFrame<LocalDate, String, Float> getPrice(Security security) {
@@ -491,4 +514,6 @@ public class NoetherlabClientV1 {
             return null;
         }
     }
+
+
 }
