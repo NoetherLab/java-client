@@ -2,7 +2,6 @@
 /shelf/
 /workspace.xml
 
-
 # Sensitive or high-churn files:
 /dataSources.ids
 /dataSources.xml
@@ -10,8 +9,10 @@
 /sqlDataSources.xml
 /dynamic.xml
 /uiDesigner.xml
+/java-client.iml
 
-/libraries
+/libraries/
+
 
 ## File-based project format:
 *.iws

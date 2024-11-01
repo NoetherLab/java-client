@@ -14,6 +14,8 @@ import com.noetherlab.client.model.GeomBrownian;
 import com.noetherlab.client.model.SECSecurity;
 import com.noetherlab.client.model.Security;
 import com.noetherlab.client.model.Submission;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -43,14 +45,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class NoetherlabClientV1 {
@@ -137,11 +138,65 @@ public class NoetherlabClientV1 {
 
             return responseString;
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("Cannot retrieve version", e);
             return null;
         }
-
     }
+
+
+    /*
+     * Index API
+     */
+
+    public Map<String, String> listIndex() {
+
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "index");
+
+            HttpGet request = new HttpGet(builder.build());
+
+            CloseableHttpResponse response = getHttpClient().execute(request);
+            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+            if (response.getCode() != HttpStatus.SC_OK) {
+                throw new Exception(response + ":" + responseString);
+            }
+
+            Map<String, String> list = new LinkedHashMap<>();
+            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+                CSVReader reader = new CSVReaderBuilder(new StringReader(responseString))
+                        .withSkipLines(1)
+                        .build();
+
+                String[] record;
+                while ((record = reader.readNext()) != null) {
+                    list.put(record[0], record[1]);
+                }
+            }
+
+            return list;
+
+        } catch (Exception e) {
+            logger.error("Cannot list indexes", e);
+            return null;
+        }
+    }
+
+    public TreeSet<LocalDate> indexTimeline(String index) {
+        //TODO:
+        return null;
+    }
+
+
+    public TreeSet<LocalDate> indexComposition(String index) {
+        //TODO:
+        return null;
+    }
+
+
+    /*
+     * Price API
+     */
 
     public SortedDataFrame<LocalDate, String, Float> getPrice(Security security) {
         return getPrice(security, true);
