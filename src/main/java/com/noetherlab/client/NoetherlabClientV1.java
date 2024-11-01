@@ -6,6 +6,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.noetherlab.client.io.csv.EdgarIO;
+import com.noetherlab.client.io.csv.SecurityIO;
 import com.noetherlab.client.io.csv.SortedDataFrameIO;
 import com.noetherlab.client.io.csv.SubmissionsIO;
 import com.noetherlab.client.io.json.LocalDateTimeAdapter;
@@ -247,6 +248,43 @@ public class NoetherlabClientV1 {
         }
     }
 
+    /*
+     * Security API
+     */
+
+    public Collection<Security> getSecurities(SecuritiesQuery query) {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "securities");
+
+            if(query.getSecurityIds() != null && !query.getSecurityIds().isEmpty()) {
+                builder.setParameter("security_ids", Joiner.on(",").join(query.getSecurityIds()));
+            }
+            if(query.getTags() != null && !query.getTags().isEmpty()) {
+                builder.setParameter("tags", Joiner.on(",").join(query.getTags()));
+            }
+            if(query.getIndices() != null && !query.getIndices().isEmpty()) {
+                builder.setParameter("indices", Joiner.on(",").join(query.getIndices()));
+            }
+
+            HttpGet request = new HttpGet(builder.build());
+
+            CloseableHttpResponse response = getHttpClient().execute(request);
+            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+            if (response.getCode() != HttpStatus.SC_OK) {
+                throw new Exception(response + ":" + responseString);
+            }
+
+            Collection<Security> composition = new ArrayList<>();
+            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+                composition = SecurityIO.fromCSV(responseString);
+            }
+            return composition;
+        } catch (Exception e) {
+            logger.error("CCannot retrieve securities", e);
+            return null;
+        }
+    }
 
     /*
      * Price API
