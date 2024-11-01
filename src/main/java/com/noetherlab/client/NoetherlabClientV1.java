@@ -18,6 +18,7 @@ import com.noetherlab.client.model.Submission;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import jakarta.ws.rs.core.MediaType;
+import okhttp3.*;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -59,6 +60,8 @@ import java.util.concurrent.TimeUnit;
 public class NoetherlabClientV1 {
 
     private static final String ENDPOINT = "http://api.noetherlab.com";
+    private static final Integer TIMEOUT = 10;
+    private static final String TOKEN_HEADER = "TOKEN";
     private final String apiKey;
 
     public static final Logger logger = LoggerFactory.getLogger(NoetherlabClientV1.class);
@@ -123,22 +126,41 @@ public class NoetherlabClientV1 {
         return client;
     }
 
+
+    OkHttpClient httpClient;
+
+    private OkHttpClient getClient() {
+        if(httpClient == null) {
+            httpClient = new OkHttpClient.Builder()
+                    .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+                    .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
+                    .readTimeout(3L * TIMEOUT, TimeUnit.SECONDS)
+                    .build();
+        }
+        return httpClient;
+    }
+
+
     public String getVersion() {
+
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
                     .setPathSegments("version");
 
-            HttpGet request = new HttpGet(builder.build());
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .build();
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(responseString);
+           Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
             }
 
-            return responseString;
+            return body.string();
         } catch (Exception e) {
             logger.error("Cannot retrieve version", e);
             return null;
@@ -155,17 +177,29 @@ public class NoetherlabClientV1 {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "index");
 
-            HttpGet request = new HttpGet(builder.build());
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(response + ":" + responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
             }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+            String responseString = body.string();
+            okhttp3.MediaType contentTypeMediaType = body.contentType();
+            if(contentTypeMediaType == null) {
+                throw new Exception("Unknown content type");
+            }
+            String contentType = contentTypeMediaType.toString();
+
 
             Map<String, String> list = new LinkedHashMap<>();
-            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+            if(contentType.equals("text/csv")) {
                 CSVReader reader = new CSVReaderBuilder(new StringReader(responseString))
                         .withSkipLines(1)
                         .build();
@@ -189,17 +223,28 @@ public class NoetherlabClientV1 {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "index", index, "timeline");
 
-            HttpGet request = new HttpGet(builder.build());
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(response + ":" + responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
             }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+            String responseString = body.string();
+            okhttp3.MediaType contentTypeMediaType = body.contentType();
+            if(contentTypeMediaType == null) {
+                throw new Exception("Unknown content type");
+            }
+            String contentType = contentTypeMediaType.toString();
 
             TreeSet<LocalDate> list = new TreeSet<>();
-            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+            if(contentType.equals("text/csv")) {
                 CSVReader reader = new CSVReaderBuilder(new StringReader(responseString))
                         .withSkipLines(1)
                         .build();
@@ -221,17 +266,28 @@ public class NoetherlabClientV1 {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT).setPathSegments("v1", "index", index, "composition");
 
-            HttpGet request = new HttpGet(builder.build());
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(response + ":" + responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
             }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+            String responseString = body.string();
+            okhttp3.MediaType contentTypeMediaType = body.contentType();
+            if(contentTypeMediaType == null) {
+                throw new Exception("Unknown content type");
+            }
+            String contentType = contentTypeMediaType.toString();
 
             Map<String, Float> composition = new LinkedHashMap<>();
-            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+            if(contentType.equals("text/csv")) {
                 CSVReader reader = new CSVReaderBuilder(new StringReader(responseString))
                         .withSkipLines(1)
                         .build();
@@ -266,17 +322,28 @@ public class NoetherlabClientV1 {
                 builder.setParameter("indices", Joiner.on(",").join(query.getIndices()));
             }
 
-            HttpGet request = new HttpGet(builder.build());
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(response + ":" + responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
             }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+            String responseString = body.string();
+            okhttp3.MediaType contentTypeMediaType = body.contentType();
+            if(contentTypeMediaType == null) {
+                throw new Exception("Unknown content type");
+            }
+            String contentType = contentTypeMediaType.toString();
 
             Collection<Security> composition = new ArrayList<>();
-            if(response.getHeader("Content-Type").getValue().equals("text/csv")) {
+            if(contentType.equals("text/csv")) {
                 composition = SecurityIO.fromCSV(responseString);
             }
             return composition;
@@ -285,6 +352,9 @@ public class NoetherlabClientV1 {
             return null;
         }
     }
+
+    /// TODO
+
 
     /*
      * Price API
