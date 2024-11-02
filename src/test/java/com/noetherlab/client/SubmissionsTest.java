@@ -7,8 +7,7 @@ import org.junit.jupiter.api.*;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -70,11 +69,11 @@ public class SubmissionsTest extends ClientTest{
 
     @Test
     @Order(4)
-    @DisplayName("Get SEC submission for AMZN data")
-    public void getSubmissionAMZN_exists() {
+    @DisplayName("Get SEC submission for CHK data")
+    public void getSubmissionCHK_exists() {
         //Arrange
-        Security security = Security.fromId("XNAS:AMZN");
-        String accessionNumber = "0001193125-07-225370";
+        Security security = Security.fromId("XNAS:CHK");
+        String accessionNumber = "0000895126-08-000351";
 
         //Act
         byte[] submissions = client.getSubmission(security.getId(), accessionNumber);
@@ -86,28 +85,27 @@ public class SubmissionsTest extends ClientTest{
 
     @Test
     @Order(5)
-    @DisplayName("Get SEC submission for AMZN - not existing")
-    public void getSubmissionAMZN_not_exists() {
+    @DisplayName("Get SEC submission for CHK - not existing")
+    public void getSubmissionCHK_not_exists() {
         //Arrange
-        Security security = Security.fromId("XNAS:AMZN");
-        String accessionNumber = "0001950047-23-003306";
+        Security security = Security.fromId("XNAS:CHK");
+        String accessionNumber = "0000895126-15-000177";
 
         //Act
         byte[] submissions = client.getSubmission(security.getId(), accessionNumber);
 
         //Assert
-        assertNotNull(submissions);
-        assertTrue(submissions.length > 100);
+        assertNull(submissions);
     }
 
 
     @Test
     @Order(6)
-    @DisplayName("Get SEC submission content for AMZN")
+    @DisplayName("Get SEC submission content for CHK")
     public void getSubmissionContentAMZN() {
         //Arrange
-        Security security = Security.fromId("XNAS:AMZN");
-        String accessionNumber = "0001950047-23-003306";
+        Security security = Security.fromId("XNAS:CHK");
+        String accessionNumber = "0000895126-08-000351";
 
         //Act
         Map<String, String> submissions = client.getSubmissionContent(security.getId(), accessionNumber);
