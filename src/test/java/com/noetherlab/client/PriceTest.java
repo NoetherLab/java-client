@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Prices API Test")
-public class PriceTest  extends ClientTest{
+public class PriceTest extends ClientTest{
 
     @BeforeAll
     public void init() {

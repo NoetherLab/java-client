@@ -1,7 +1,6 @@
 package com.noetherlab.client;
 
 import com.google.common.base.Joiner;
-
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -18,38 +17,18 @@ import com.noetherlab.client.model.Submission;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import jakarta.ws.rs.core.MediaType;
-import okhttp3.*;
-import org.apache.hc.client5.http.HttpRequestRetryStrategy;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
-import org.apache.hc.client5.http.impl.DefaultRedirectStrategy;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.client5.http.protocol.RedirectStrategy;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
-import org.apache.hc.core5.http.Header;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.io.SocketConfig;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.message.BasicHeader;
-import org.apache.hc.core5.http.ssl.TLS;
 import org.apache.hc.core5.net.URIBuilder;
-import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
-import org.apache.hc.core5.pool.PoolReusePolicy;
-import org.apache.hc.core5.ssl.SSLContexts;
-import org.apache.hc.core5.util.TimeValue;
-import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -66,8 +45,6 @@ public class NoetherlabClientV1 {
 
     public static final Logger logger = LoggerFactory.getLogger(NoetherlabClientV1.class);
 
-    private CloseableHttpClient client;
-
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .registerTypeAdapter(LocalTime.class, new LocalTimeAdapter())
@@ -77,55 +54,6 @@ public class NoetherlabClientV1 {
     public NoetherlabClientV1(String apiKey) {
         this.apiKey = apiKey;
     }
-
-    private CloseableHttpClient getHttpClient() {
-        if(client == null) {
-
-            int timeout = 10;
-
-            PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-                    .setSSLSocketFactory(
-                            SSLConnectionSocketFactoryBuilder.create()
-                                    .setSslContext(SSLContexts.createSystemDefault())
-                                    .setTlsVersions(TLS.V_1_3, TLS.V_1_2)
-                                    .build())
-                    .setDefaultSocketConfig(SocketConfig.custom()
-                            .setSoTimeout(Timeout.ofSeconds(timeout))
-                            .setSoKeepAlive(true)
-                            .build())
-                    .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
-                    .setConnPoolPolicy(PoolReusePolicy.LIFO)
-                    .build();
-
-
-            RequestConfig config = RequestConfig.custom()
-                    .setConnectionRequestTimeout(timeout, TimeUnit.SECONDS)
-                    .setResponseTimeout(timeout, TimeUnit.SECONDS)
-                    .build();
-
-
-            Collection<Header> headers = new ArrayList<>();
-            headers.add(new BasicHeader("TOKEN", apiKey));
-
-
-            RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
-
-            HttpRequestRetryStrategy retryStrategy =
-                    new DefaultHttpRequestRetryStrategy(3, TimeValue.ofSeconds(timeout));
-
-            client = HttpClients.custom()
-                    .setConnectionManager(connectionManager)
-                    .setDefaultRequestConfig(config)
-                    .setDefaultHeaders(headers)
-                    .setRedirectStrategy(redirectStrategy)
-                    .evictExpiredConnections()
-                    .evictIdleConnections(Timeout.ofSeconds(timeout))
-                    .setRetryStrategy(retryStrategy)
-                    .build();
-        }
-        return client;
-    }
-
 
     OkHttpClient httpClient;
 
@@ -742,26 +670,28 @@ public class NoetherlabClientV1 {
         }
     }
 
-
-    /// TODO
-
-
     public Collection<SECSecurity> getEdgarSecurities(Security s) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
-                    .setPathSegments(s.getId(), "securities-std");
+                    .setPathSegments("v1", s.getId(), "securities-std");
 
-            HttpGet request = new HttpGet(builder.build());
-            request.setHeader("Accept", "text/csv");
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .header("Accept", "text/csv")
+                    .build();
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
             }
 
-            return EdgarIO.securitiesFromCSV(responseString);
+            return EdgarIO.securitiesFromCSV(body.string());
+
         } catch (Exception e) {
             logger.error("", e);
             return null;
@@ -769,31 +699,40 @@ public class NoetherlabClientV1 {
     }
 
 
-    public Map<String, GeomBrownian> getModels() {
-        return getModels(null);
-    }
-
-
-    public Map<String, GeomBrownian> getModels(Collection<Security> securities) {
+    public Map<String, GeomBrownian> getModels(SecuritiesQuery query) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
-                    .setPathSegments("models");
+                    .setPathSegments("v1", "models");
 
-            if(securities != null && !securities.isEmpty()) {
-                builder.addParameter("security_ids", Joiner.on(",").join(securities.stream().map(Security::getId).toList()));
+            if(query.getSecurityIds() != null && !query.getSecurityIds().isEmpty()) {
+                builder.setParameter("security_ids", Joiner.on(",").join(query.getSecurityIds()));
             }
-            HttpGet request = new HttpGet(builder.build());
-            request.setHeader("Accept", MediaType.APPLICATION_JSON);
+            if(query.getTags() != null && !query.getTags().isEmpty()) {
+                builder.setParameter("tags", Joiner.on(",").join(query.getTags()));
+            }
+            if(query.getIndices() != null && !query.getIndices().isEmpty()) {
+                builder.setParameter("indices", Joiner.on(",").join(query.getIndices()));
+            }
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .header("Accept", MediaType.APPLICATION_JSON)
+                    .build();
 
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
             }
 
             Type type = new TypeToken<Map<String, GeomBrownian>>(){}.getType();
-            return gson.fromJson(responseString, type);
+            return gson.fromJson(body.string(), type);
+
         } catch (Exception e) {
             logger.error("", e);
             return null;
