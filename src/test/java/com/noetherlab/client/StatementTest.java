@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Statement API Test")
-public class StatementTest  extends ClientTest{
+public class StatementTest extends ClientTest{
 
     @BeforeAll
     public void init() {

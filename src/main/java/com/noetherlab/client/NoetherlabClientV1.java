@@ -648,26 +648,30 @@ public class NoetherlabClientV1 {
         }
     }
 
-    /// TODO
 
 
     public Collection<Submission> getSubmissions(String secId) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
-                    .setPathSegments(secId, "submissions");
+                    .setPathSegments("v1", secId, "submissions");
 
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .header("Accept", "text/csv")
+                    .build();
 
-            HttpGet request = new HttpGet(builder.build());
-            request.setHeader("Accept", "text/csv");
-
-            CloseableHttpResponse response = getHttpClient().execute(request);
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(responseString);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
             }
 
-            return SubmissionsIO.submissionsFromCSV(responseString);
+            return SubmissionsIO.submissionsFromCSV(body.string());
+
         } catch (Exception e) {
             logger.error("", e);
             return null;
@@ -677,25 +681,29 @@ public class NoetherlabClientV1 {
     public byte[] getSubmission(String secId, String accessionNumber) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
-                    .setPathSegments(secId, accessionNumber);
+                    .setPathSegments("v1", secId, accessionNumber);
 
 
-            HttpGet request = new HttpGet(builder.build());
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .header("Accept",  MediaType.APPLICATION_OCTET_STREAM)
+                    .build();
 
-            request.setHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
 
-            CloseableHttpResponse response = getHttpClient().execute(request);
-
-            if(response.getCode() == HttpStatus.SC_NO_CONTENT) {
+            if(response.code() == HttpStatus.SC_NO_CONTENT) {
                 return null;
             }
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                String res = EntityUtils.toString(response.getEntity());
-                throw new Exception(res);
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
             }
 
-            return EntityUtils.toByteArray(response.getEntity());
+            return body.bytes();
         } catch (Exception e) {
             logger.error("", e);
             return null;
@@ -705,32 +713,38 @@ public class NoetherlabClientV1 {
     public Map<String, String> getSubmissionContent(String secId, String accessionNumber) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
-                    .setPathSegments(secId, accessionNumber, "content");
+                    .setPathSegments("v1", secId, accessionNumber, "content");
 
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
 
-            HttpGet request = new HttpGet(builder.build());
-
-            CloseableHttpResponse response = getHttpClient().execute(request);
-
-            if (response.getCode() == HttpStatus.SC_NO_CONTENT) {
-                return null;
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
             }
 
-            String res = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (response.getCode() != HttpStatus.SC_OK) {
-                throw new Exception(res);
+            if(response.code() == HttpStatus.SC_NO_CONTENT) {
+                return null;
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
             }
 
             Type type = new TypeToken<Map<String, String>>(){}.getType();
+            return gson.fromJson(body.string(), type);
 
-
-            return gson.fromJson(res, type);
         } catch (Exception e) {
             logger.error("", e);
             return null;
         }
     }
+
+
+    /// TODO
+
 
     public Collection<SECSecurity> getEdgarSecurities(Security s) {
         try {
