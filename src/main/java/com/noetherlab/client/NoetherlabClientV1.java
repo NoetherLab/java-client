@@ -353,8 +353,6 @@ public class NoetherlabClientV1 {
         }
     }
 
-    /// TODO
-
 
     /*
      * Price API
@@ -373,34 +371,46 @@ public class NoetherlabClientV1 {
             InputStream isMeta = null;
             if(withMeta) {
                 URIBuilder builder = new URIBuilder(ENDPOINT)
-                        .setPathSegments("security", security.getId(), "prices", "meta");
+                        .setPathSegments("v1", "security", security.getId(), "prices", "meta");
 
-                HttpGet request = new HttpGet(builder.build());
+                Request request = new Request.Builder()
+                        .get().url(builder.build().toURL())
+                        .header(TOKEN_HEADER, apiKey)
+                        .build();
 
-                CloseableHttpResponse response = getHttpClient().execute(request);
-
-                if (response.getCode() != HttpStatus.SC_OK) {
-                    String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    throw new Exception(responseString);
+                Response response = getClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new Exception(response.code() + ": " + response.message());
                 }
-                isMeta = response.getEntity().getContent();
+                ResponseBody body = response.body();
+                if (body == null) {
+                    throw new Exception("Body is empty");
+                }
+
+                isMeta = body.byteStream();
             }
 
             //////
             InputStream isData;
             {
                 URIBuilder builder = new URIBuilder(ENDPOINT)
-                        .setPathSegments("security", security.getId(), "prices", "data");
+                        .setPathSegments("v1", "security", security.getId(), "prices", "data");
 
-                HttpGet request = new HttpGet(builder.build());
+                Request request = new Request.Builder()
+                        .get().url(builder.build().toURL())
+                        .header(TOKEN_HEADER, apiKey)
+                        .build();
 
-                CloseableHttpResponse response = getHttpClient().execute(request);
-
-                if (response.getCode() != HttpStatus.SC_OK) {
-                    String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    throw new Exception(responseString);
+                Response response = getClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new Exception(response.code() + ": " + response.message());
                 }
-                isData = response.getEntity().getContent();
+                ResponseBody body = response.body();
+                if (body == null) {
+                    throw new Exception("Body is empty");
+                }
+
+                isData = body.byteStream();
             }
 
             SortedDataFrameIO.readCSV(res, isMeta, isData);
@@ -410,6 +420,107 @@ public class NoetherlabClientV1 {
             return null;
         }
     }
+
+    public SortedDataFrame<LocalDate, String, Float> getCurrency(String currency) {
+        try {
+            SortedDataFrame<LocalDate, String, Float> res =
+                    new SortedDataFrame<>(LocalDate.class, String.class, Float.class);
+
+            //////
+            InputStream isData;
+            {
+                URIBuilder builder = new URIBuilder(ENDPOINT)
+                        .setPathSegments("v1", "currency", currency,  "prices", "data");
+
+                Request request = new Request.Builder()
+                        .get().url(builder.build().toURL())
+                        .header(TOKEN_HEADER, apiKey)
+                        .build();
+
+                Response response = getClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new Exception(response.code() + ": " + response.message());
+                }
+                ResponseBody body = response.body();
+                if (body == null) {
+                    throw new Exception("Body is empty");
+                }
+
+                isData = body.byteStream();
+            }
+
+            SortedDataFrameIO.readCSV(res, null, isData);
+            return res;
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+    }
+
+    public SortedDataFrame<LocalDate, String, Float> getEnvironment() {
+
+        try {
+            SortedDataFrame<LocalDate, String, Float> res =
+                    new SortedDataFrame<>(LocalDate.class, String.class, Float.class);
+
+            //////
+            InputStream isMeta;
+            {
+                URIBuilder builder = new URIBuilder(ENDPOINT)
+                        .setPathSegments("v1", "environment", "meta");
+
+                Request request = new Request.Builder()
+                        .get().url(builder.build().toURL())
+                        .header(TOKEN_HEADER, apiKey)
+                        .build();
+
+                Response response = getClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new Exception(response.code() + ": " + response.message());
+                }
+                ResponseBody body = response.body();
+                if (body == null) {
+                    throw new Exception("Body is empty");
+                }
+
+                isMeta = body.byteStream();
+            }
+
+            //////
+            InputStream isData;
+            {
+                URIBuilder builder = new URIBuilder(ENDPOINT)
+                        .setPathSegments("v1", "environment", "data");
+
+                Request request = new Request.Builder()
+                        .get().url(builder.build().toURL())
+                        .header(TOKEN_HEADER, apiKey)
+                        .build();
+
+                Response response = getClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new Exception(response.code() + ": " + response.message());
+                }
+                ResponseBody body = response.body();
+                if (body == null) {
+                    throw new Exception("Body is empty");
+                }
+
+                isData = body.byteStream();
+            }
+
+            SortedDataFrameIO.readCSV(res, isMeta, isData);
+
+            return res;
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+    }
+
+
+    /// TODO
+
 
     public SortedDataFrame<LocalDate, String, Float> getStatement(Security security) {
         return getStatement(security, true);
@@ -522,86 +633,9 @@ public class NoetherlabClientV1 {
     }
 
 
-    public SortedDataFrame<LocalDate, String, Float> getCurrency(String currency) {
-        try {
-            SortedDataFrame<LocalDate, String, Float> res =
-                    new SortedDataFrame<>(LocalDate.class, String.class, Float.class);
-
-            //////
-            InputStream isData;
-            {
-                URIBuilder builder = new URIBuilder(ENDPOINT)
-                        .setPathSegments("currency", currency,  "prices", "data");
-
-                HttpGet request = new HttpGet(builder.build());
-
-                CloseableHttpResponse response = getHttpClient().execute(request);
-
-                if (response.getCode() != HttpStatus.SC_OK) {
-                    String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    throw new Exception(responseString);
-                }
-                isData = response.getEntity().getContent();
-            }
-
-            SortedDataFrameIO.readCSV(res, null, isData);
-            return res;
-        } catch (Exception e) {
-            logger.error("", e);
-            return null;
-        }
-    }
 
 
-    public SortedDataFrame<LocalDate, String, Float> getEnvironment() {
 
-        try {
-            SortedDataFrame<LocalDate, String, Float> res =
-                    new SortedDataFrame<>(LocalDate.class, String.class, Float.class);
-
-            //////
-            InputStream isMeta;
-            {
-                URIBuilder builder = new URIBuilder(ENDPOINT)
-                        .setPathSegments("environment", "meta");
-
-                HttpGet request = new HttpGet(builder.build());
-
-                CloseableHttpResponse response = getHttpClient().execute(request);
-
-                if (response.getCode() != HttpStatus.SC_OK) {
-                    String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    throw new Exception(responseString);
-                }
-                isMeta = response.getEntity().getContent();
-            }
-
-            //////
-            InputStream isData;
-            {
-                URIBuilder builder = new URIBuilder(ENDPOINT)
-                        .setPathSegments("environment", "data");
-
-                HttpGet request = new HttpGet(builder.build());
-
-                CloseableHttpResponse response = getHttpClient().execute(request);
-
-                if (response.getCode() != HttpStatus.SC_OK) {
-                    String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    throw new Exception(responseString);
-                }
-                isData = response.getEntity().getContent();
-            }
-
-            SortedDataFrameIO.readCSV(res, isMeta, isData);
-
-            return res;
-        } catch (Exception e) {
-            logger.error("", e);
-            return null;
-        }
-
-    }
 
     public Map<String, GeomBrownian> getModels(Collection<Security> securities) {
         try {
