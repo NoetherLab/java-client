@@ -90,6 +90,62 @@ public class SubmissionsIO {
         return submissions;
     }
 
+    public static Collection<Announcement> announcementsFromCSV(String s) {
+        return announcementsFromCSV(new StringReader(s));
+    }
+
+    public static Collection<Announcement> announcementsFromCSV(Reader reader) {
+        Collection<Announcement> announcements = new ArrayList<>();
+
+        try (CSVReader br = new CSVReader(reader)) {
+            String[] chunks;
+            Map<String, Integer> header = new HashMap<>();
+            while ((chunks = br.readNext()) != null) {
+                if (header.isEmpty()) {
+                    for (int i = 0; i < chunks.length; ++i) {
+                        header.put(chunks[i], i);
+                    }
+                } else {
+                    Announcement announcement = new Announcement();
+
+                    announcement.setAccessionNumber(chunks[header.get("AccessionNumber")]);
+
+                    String filingDate = chunks[header.get("FilingDate")].trim();
+                    if (!filingDate.isEmpty()) {
+                        announcement.setFilingDate(LocalDate.parse(filingDate, DateTimeFormatter.ISO_DATE));
+                    }
+
+
+
+                    String reportDate = chunks[header.get("ReportDate")].trim();
+                    if (!reportDate.isEmpty()) {
+                        announcement.setReportDate(LocalDate.parse(reportDate, DateTimeFormatter.ISO_DATE));
+                    }
+                    String acceptanceDateTime = chunks[header.get("AcceptanceDateTime")];
+                    if (!acceptanceDateTime.isEmpty()) {
+                        announcement.setAcceptanceDateTime(LocalDateTime.parse(acceptanceDateTime, DateTimeFormatter.ISO_DATE_TIME));
+                    }
+                    announcement.setForm(chunks[header.get("Form")]);
+                    announcement.setFileNumber(chunks[header.get("FileNumber")]);
+                    announcement.setVersion(Integer.valueOf(chunks[header.get("Version")]));
+                    announcement.setSectionId(chunks[header.get("Section.Id")]);
+                    announcement.setItemId(chunks[header.get("Item.Id")]);
+                    announcement.setSectionDesc(chunks[header.get("Section.Desc")]);
+                    announcement.setItemDesc(chunks[header.get("Item.Desc")]);
+                    announcement.setUrl(chunks[header.get("URL")]);
+                    announcement.setUrlViewer(chunks[header.get("URL.Viewer")]);
+
+                    announcements.add(announcement);
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
+        return announcements;
+    }
+
     public static void submissionsToCSV(Map<Integer, Collection<Submission>> submissions, OutputStream os) {
         PrintStream s = new PrintStream(os);
         printHeader(s);
@@ -362,7 +418,5 @@ public class SubmissionsIO {
         s.print("URL.Viewer");
         s.println();
     }
-
-
 
 }

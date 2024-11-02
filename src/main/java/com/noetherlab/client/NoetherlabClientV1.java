@@ -10,10 +10,7 @@ import com.noetherlab.client.io.csv.SortedDataFrameIO;
 import com.noetherlab.client.io.csv.SubmissionsIO;
 import com.noetherlab.client.io.json.LocalDateTimeAdapter;
 import com.noetherlab.client.io.json.LocalTimeAdapter;
-import com.noetherlab.client.model.GeomBrownian;
-import com.noetherlab.client.model.SECSecurity;
-import com.noetherlab.client.model.Security;
-import com.noetherlab.client.model.Submission;
+import com.noetherlab.client.model.*;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import jakarta.ws.rs.core.MediaType;
@@ -606,6 +603,35 @@ public class NoetherlabClientV1 {
         }
     }
 
+
+    public Collection<Announcement> getAnnouncements(String secId) {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT)
+                    .setPathSegments("v1", secId, "announcements");
+
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .header("Accept", "text/csv")
+                    .build();
+
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+
+            return SubmissionsIO.announcementsFromCSV(body.string());
+
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+    }
+
     public byte[] getSubmission(String secId, String accessionNumber) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
@@ -632,6 +658,34 @@ public class NoetherlabClientV1 {
             }
 
             return body.bytes();
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+    }
+
+    public Collection<SECSecurity> getEdgarSecurities(Security s) {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT)
+                    .setPathSegments("v1", s.getId(), "securities-std");
+
+            Request request = new Request.Builder()
+                    .get().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .header("Accept", "text/csv")
+                    .build();
+
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+
+            return EdgarIO.securitiesFromCSV(body.string());
+
         } catch (Exception e) {
             logger.error("", e);
             return null;
@@ -669,35 +723,6 @@ public class NoetherlabClientV1 {
             return null;
         }
     }
-
-    public Collection<SECSecurity> getEdgarSecurities(Security s) {
-        try {
-            URIBuilder builder = new URIBuilder(ENDPOINT)
-                    .setPathSegments("v1", s.getId(), "securities-std");
-
-            Request request = new Request.Builder()
-                    .get().url(builder.build().toURL())
-                    .header(TOKEN_HEADER, apiKey)
-                    .header("Accept", "text/csv")
-                    .build();
-
-            Response response = getClient().newCall(request).execute();
-            if (!response.isSuccessful()) {
-                throw new Exception(response.code() + ": " + response.message());
-            }
-            ResponseBody body = response.body();
-            if (body == null) {
-                throw new Exception("Body is empty");
-            }
-
-            return EdgarIO.securitiesFromCSV(body.string());
-
-        } catch (Exception e) {
-            logger.error("", e);
-            return null;
-        }
-    }
-
 
     public Map<String, GeomBrownian> getModels(SecuritiesQuery query) {
         try {

@@ -1,5 +1,6 @@
 package com.noetherlab.client;
 
+import com.noetherlab.client.model.Announcement;
 import com.noetherlab.client.model.Security;
 import com.noetherlab.client.model.Submission;
 import org.junit.jupiter.api.*;
@@ -69,6 +70,23 @@ public class SubmissionsTest extends ClientTest{
 
     @Test
     @Order(4)
+    @DisplayName("List SEC announcements for EPAM")
+    public void getAnnouncementsEPAM() {
+        //Arrange
+        Security security = Security.fromId("XNYS:EPAM");
+
+        //Act
+        Collection<Announcement> announcements = client.getAnnouncements(security.getId());
+
+        //Assert
+        assertNotNull(announcements);
+        assertTrue(announcements.size() > 100);
+    }
+
+
+
+    @Test
+    @Order(5)
     @DisplayName("Get SEC submission for CHK data")
     public void getSubmissionCHK_exists() {
         //Arrange
@@ -84,7 +102,7 @@ public class SubmissionsTest extends ClientTest{
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     @DisplayName("Get SEC submission for CHK - not existing")
     public void getSubmissionCHK_not_exists() {
         //Arrange
@@ -100,7 +118,7 @@ public class SubmissionsTest extends ClientTest{
 
 
     @Test
-    @Order(6)
+    @Order(7)
     @DisplayName("Get SEC submission content for CHK")
     public void getSubmissionContentAMZN() {
         //Arrange

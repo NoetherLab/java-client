@@ -1,13 +1,14 @@
 package com.noetherlab.client;
 
 
+import com.noetherlab.client.model.SECSecurity;
 import com.noetherlab.client.model.Security;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -123,6 +124,23 @@ public class StatementTest extends ClientTest{
         assertTrue(df.getData().columnKeySet().size() > 20);
         assertTrue(df.getData().rowKeySet().size() > 4 * 10);
     }
+
+
+    @Test
+    @Order(7)
+    @DisplayName("Retrieve standardized SEC securities for EPAM")
+    public void getEdgarSecuritiesEPAM() {
+        //Arrange
+        Security security = Security.fromId("XNYS:EPAM");
+
+        //Act
+        Collection<SECSecurity> securities = client.getEdgarSecurities(security);
+
+        //Assert
+        assertNotNull(securities);
+        assertFalse(securities.isEmpty());
+    }
+
 
 
 
