@@ -6,6 +6,7 @@ import com.noetherlab.client.model.Submission;
 import org.junit.jupiter.api.*;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -84,9 +85,28 @@ public class SubmissionsTest extends ClientTest{
     }
 
 
-
     @Test
     @Order(5)
+    @DisplayName("Head SEC submission for CHK data")
+    public void headSubmission() {
+        //Arrange
+        Security security = Security.fromId("XNAS:CHK");
+        String accessionNumber = "0000895126-08-000351";
+
+        //Act
+        Map<String, Object> head = client.headSubmission(security.getId(), accessionNumber);
+
+        //Assert
+        assertNotNull(head);
+        assertEquals(head.size(), 2);
+        assertTrue(head.containsKey("Content-Length"));
+        assertTrue(head.containsKey("Last-modified"));
+    }
+
+
+
+    @Test
+    @Order(6)
     @DisplayName("Get SEC submission for CHK data")
     public void getSubmissionCHK_exists() {
         //Arrange
@@ -102,7 +122,7 @@ public class SubmissionsTest extends ClientTest{
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     @DisplayName("Get SEC submission for CHK - not existing")
     public void getSubmissionCHK_not_exists() {
         //Arrange
@@ -117,8 +137,29 @@ public class SubmissionsTest extends ClientTest{
     }
 
 
+
+
     @Test
-    @Order(7)
+    @Order(8)
+    @DisplayName("Head SEC submission content for CHK")
+    public void headSubmissionContent() {
+        //Arrange
+        Security security = Security.fromId("XNAS:CHK");
+        String accessionNumber = "0000895126-08-000351";
+
+        //Act
+        Map<String, Object> head = client.headSubmissionContent(security.getId(), accessionNumber);
+
+        //Assert
+        assertNotNull(head);
+        assertEquals(head.size(), 2);
+        assertTrue(head.containsKey("Content-Length"));
+        assertTrue(head.containsKey("Last-modified"));
+    }
+
+
+    @Test
+    @Order(9)
     @DisplayName("Get SEC submission content for CHK")
     public void getSubmissionContentAMZN() {
         //Arrange
@@ -131,6 +172,24 @@ public class SubmissionsTest extends ClientTest{
         //Assert
         assertNotNull(submissions);
         assertTrue(submissions.size() > 1);
+    }
+
+
+
+    @Test
+    @Order(10)
+    @DisplayName("Search announcements by content")
+    public void searchAnnouncements() {
+        //Arrange
+        String query = "earnings";
+        int limit = 10;
+
+        //Act
+        List<Map<String, Object>> announcements = client.searchAnnouncements(query, limit);
+
+        //Assert
+        assertNotNull(announcements);
+        assertEquals(limit, announcements.size());
     }
 
 

@@ -14,10 +14,7 @@ import com.noetherlab.client.model.*;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import jakarta.ws.rs.core.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.net.URIBuilder;
 import org.slf4j.Logger;
@@ -632,6 +629,45 @@ public class NoetherlabClientV1 {
         }
     }
 
+    public Map<String, Object> headSubmission(String secId, String accessionNumber) {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT)
+                    .setPathSegments("v1", secId, accessionNumber);
+
+
+            Request request = new Request.Builder()
+                    .head().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
+
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+
+            if(response.code() == HttpStatus.SC_NO_CONTENT) {
+                return null;
+            }
+
+            Map<String, Object> res = new HashMap<>();
+            String contentLength = response.header("Content-Length");
+            if(contentLength != null) {
+                res.put("Content-Length", Long.valueOf(contentLength));
+            }
+
+            String lastModified = response.header("Last-modified");
+            if(lastModified != null) {
+                res.put("Last-modified", DateTimeFormatter.ISO_DATE_TIME.parse(lastModified));
+            }
+            return res;
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+    }
+
+
+
     public byte[] getSubmission(String secId, String accessionNumber) {
         try {
             URIBuilder builder = new URIBuilder(ENDPOINT)
@@ -691,6 +727,42 @@ public class NoetherlabClientV1 {
             return null;
         }
     }
+    public Map<String, Object> headSubmissionContent(String secId, String accessionNumber) {
+        try {
+            URIBuilder builder = new URIBuilder(ENDPOINT)
+                    .setPathSegments("v1", secId, accessionNumber, "content");
+
+            Request request = new Request.Builder()
+                    .head().url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
+
+            Response response = getClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+
+            if(response.code() == HttpStatus.SC_NO_CONTENT) {
+                return null;
+            }
+
+            Map<String, Object> res = new HashMap<>();
+            String contentLength = response.header("Content-Length");
+            if(contentLength != null) {
+                res.put("Content-Length", Long.valueOf(contentLength));
+            }
+
+            String lastModified = response.header("Last-modified");
+            if(lastModified != null) {
+                res.put("Last-modified", DateTimeFormatter.ISO_DATE_TIME.parse(lastModified));
+            }
+
+            return res;
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+    }
 
     public Map<String, String> getSubmissionContent(String secId, String accessionNumber) {
         try {
@@ -723,6 +795,47 @@ public class NoetherlabClientV1 {
             return null;
         }
     }
+
+    public List<Map<String, Object>> searchAnnouncements(String query, int limit) {
+        try {
+
+            URIBuilder builder = new URIBuilder(ENDPOINT)
+                    .setPathSegments("v1", "announcements", "search")
+                    .setParameter("limit", String.valueOf(limit));
+
+            RequestBody reqBody = RequestBody.create(query, okhttp3.MediaType.get("text/plain"));
+
+            Request request = new Request.Builder()
+                    .post(reqBody).url(builder.build().toURL())
+                    .header(TOKEN_HEADER, apiKey)
+                    .build();
+
+            Response response = getClient().newCall(request).execute();
+
+            if (!response.isSuccessful()) {
+                throw new Exception(response.code() + ": " + response.message());
+            }
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new Exception("Body is empty");
+            }
+
+            Type type = new TypeToken<List<Map<String, Object>>>(){}.getType();
+            return gson.fromJson(body.string(), type);
+
+        } catch (Exception e) {
+            logger.error("", e);
+            return null;
+        }
+
+    }
+
+
+
+
+    /*
+     * Model API
+     */
 
     public Map<String, GeomBrownian> getModels(SecuritiesQuery query) {
         try {
