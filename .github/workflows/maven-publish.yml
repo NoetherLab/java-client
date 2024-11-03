@@ -35,6 +35,8 @@ jobs:
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+      env:
+        NOETHERLAB_API_KEY: ${{ secrets.NOETHERLAB_API_KEY }}
 
 #    - name: Publish to GitHub Packages Apache Maven
 #      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
