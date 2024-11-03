@@ -46,5 +46,6 @@ jobs:
     - name: Publish to the Maven Central Repository
       run: mvn --batch-mode deploy
       env:
+        NOETHERLAB_API_KEY: ${{ secrets.NOETHERLAB_API_KEY }}
         MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
