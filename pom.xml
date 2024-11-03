@@ -37,6 +37,10 @@
 
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+
+
         <guava.version>33.3.1-jre</guava.version>
         <gson.version>2.11.0</gson.version>
         <httpclient5.version>5.4</httpclient5.version>
@@ -123,8 +127,26 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven-compiler-plugin.version}</version>
+        </dependency>
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <release>19</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 
 </project>
