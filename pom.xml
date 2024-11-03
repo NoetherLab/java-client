@@ -23,10 +23,15 @@
     </scm>
 
     <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-snapshots</id>
+            <name>Sonatype Snapshots OSSRH</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
         <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/NoetherLab/java-client</url>
+            <id>sonatype-staging</id>
+            <name>Sonatype Staging OSSRH</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
