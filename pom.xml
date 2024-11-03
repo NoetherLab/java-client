@@ -8,17 +8,28 @@
     <version>1.2.308</version>
     <url>https://github.com/NoetherLab/java-client</url>
     <description>NoetherLab API v1 available endpoints</description>
-    <scm>
-        <connection>scm:git:git://github.com/NoetherLab/java-client.git</connection>
-        <developerConnection>scm:git:ssh://github.com/NoetherLab/java-client.git</developerConnection>
-        <url>scm:git:git://github.com/NoetherLab/java-client.git</url>
-    </scm>
+
     <developers>
         <developer>
             <name>NoetherLabDev</name>
             <email>dev@noetherlab.com</email>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/NoetherLab/java-client.git</connection>
+        <developerConnection>scm:git:ssh://github.com/NoetherLab/java-client.git</developerConnection>
+        <url>scm:git:git://github.com/NoetherLab/java-client.git</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/NoetherLab/java-client</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>19</maven.compiler.target>
@@ -37,6 +48,8 @@
         <junit.version>5.11.3</junit.version>
         <commons-io.version>2.17.0</commons-io.version>
     </properties>
+
+
     <dependencies>
 
         <dependency>
