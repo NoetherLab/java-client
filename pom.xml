@@ -5,7 +5,7 @@
     <artifactId>java-client</artifactId>
     <packaging>jar</packaging>
     <name>java-client</name>
-    <version>1.2.308</version>
+    <version>1.0.308</version>
     <url>https://github.com/NoetherLab/java-client</url>
     <description>NoetherLab API v1 available endpoints</description>
 
@@ -34,13 +34,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>19</maven.compiler.target>
         <maven.compiler.source>19</maven.compiler.source>
-
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
-
-
         <guava.version>33.3.1-jre</guava.version>
         <gson.version>2.11.0</gson.version>
         <httpclient5.version>5.4</httpclient5.version>
@@ -147,6 +141,5 @@
             </plugin>
         </plugins>
     </build>
-
 
 </project>
