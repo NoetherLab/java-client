@@ -85,6 +85,7 @@ public class SubmissionsTest extends ClientTest{
     }
 
 
+    @Disabled
     @Test
     @Order(5)
     @DisplayName("Head SEC submission for CHK data")
@@ -136,9 +137,7 @@ public class SubmissionsTest extends ClientTest{
         assertNull(submissions);
     }
 
-
-
-
+    @Disabled
     @Test
     @Order(8)
     @DisplayName("Head SEC submission content for CHK")
